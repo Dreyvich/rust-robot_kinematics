@@ -2,21 +2,34 @@ use super::alias::Transform;
 use nalgebra::Vector3;
 
 /// Describe the geometry of a joint, based on Khalil Kleinfinger-convention.
-///
-/// Geometrics values for a joint j are :
-/// - alpha_j : angle between z_j-1 and z_j about x_j-1
-/// - d_j : distance between z_j-1 and z_j along x_j-1
-/// - theta_j : angle between x_j-1 and x_j about z_j
-/// - r_j : distance between x_j-1 and x_j along z_j
+/// Between two joints j-1 and j, the transformation matrix from frame R_j-1 to frame R_j
+/// is expressed as a function of four geometrics parameters : α, d, Θ and r.
+/// Θ and r can be variable depending of the type of joint
 #[derive(Debug, Copy, Clone)]
 pub enum JointGeometry {
     /// Joint with distance r variable
-    Prismatic { alpha: f64, d: f64, theta: f64 },
-    /// Joint with angle theta variable
-    Revolute { alpha: f64, d: f64, r: f64 },
+    Prismatic {
+        /// Angle between z_j-1 and z_j about x_j-1
+        alpha: f64,
+        /// Distance between z_j-1 and z_j along x_j-1
+        d: f64,
+        /// Angle between x_j-1 and x_j about z_j
+        theta: f64,
+    },
+    /// Joint with angle Θ variable
+    Revolute {
+        /// Angle between z_j-1 and z_j about x_-1
+        alpha: f64,
+        /// Distance between z_j-1 and z_j along x_j-1
+        d: f64,
+        /// Distance between x_j-1 and x_j along z_j
+        r: f64,
+    },
 }
 
 impl JointGeometry {
+    /// Compute the transformation matrix between previous joint and asked joint
+    /// based on the associated joint geometry.
     pub fn compute_transform(&self, joint_value: f64) -> Transform {
         let (alphaj, dj, thetaj, rj): (f64, f64, f64, f64);
         match self {
